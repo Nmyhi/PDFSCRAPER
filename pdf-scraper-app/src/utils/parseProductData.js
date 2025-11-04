@@ -20,39 +20,44 @@ export const parseProductData = (text, filename = "") => {
   const powerFromName = filename.match(/(\d+\.?\d*)\s*[wW]/)?.[1] || "";
   const colourTempFromName = filename.match(/(\d{3,4})\s*[kK]/)?.[1] || "";
 
- // ✅ Beam angle printed under the diagram: single degree with decimal on its own line
-let beamAngleMeasured =
-  // 1) A standalone "xx.x°" on its own line (most reliable for the diagram caption)
-  getValue(
-    text,
-    /(?:^|\r?\n)\s*([0-9]{1,3}[.,][0-9]{1,2})\s*°\s*(?:\r?\n|$)/m
-  ) ||
-  // 2) Within common diagram sections ("Iso", "Beam", etc.) then a standalone degree on a near line
-  getValue(
-    text,
-    /(Iso[\s-]*candela|Iso[\s-]*lux|Iso\s*Diagrams|Beam\s*details|Beam\s*center)[\s\S]{0,500}?\r?\n\s*([0-9]{1,3}[.,][0-9]{1,2})\s*°/i
-  ) ||
-  // 3) Fallback: first decimal degree anywhere (avoids 90/60/45 axis labels)
-  getValue(
-    text,
-    /([0-9]{1,3}[.,][0-9]{1,2})\s*°/
-  ) ||
-  "";
-
-
+  // ✅ Beam angle printed under the diagram: single degree with decimal on its own line
+  let beamAngleMeasured =
+    // 1) A standalone "xx.x°" on its own line (most reliable for the diagram caption)
+    getValue(
+      text,
+      /(?:^|\r?\n)\s*([0-9]{1,3}[.,][0-9]{1,2})\s*°\s*(?:\r?\n|$)/m
+    ) ||
+    // 2) Within common diagram sections ("Iso", "Beam", etc.) then a standalone degree on a near line
+    getValue(
+      text,
+      /(Iso[\s-]*candela|Iso[\s-]*lux|Iso\s*Diagrams|Beam\s*details|Beam\s*center)[\s\S]{0,500}?\r?\n\s*([0-9]{1,3}[.,][0-9]{1,2})\s*°/i
+    ) ||
+    // 3) Fallback: first decimal degree anywhere (avoids 90/60/45 axis labels)
+    getValue(text, /([0-9]{1,3}[.,][0-9]{1,2})\s*°/) ||
+    "";
 
   return {
     family,
     subfamily: "",
     LightEngine: "",
 
-    power: normalize(getValue(text, /Power:\s*([\d.,]+\s*\w+)/i)) || powerFromName,
+    // ✅ Power: read ONLY from the "Power:" label (allowing line breaks/odd spacing)
+    power: normalize(
+      getValue(text, /\bPower\b\s*:?\s*([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i) ||
+      getValue(text, /\bPower\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i)
+    ),
+
     colourTemp: normalize(getValue(text, /Color temperature:\s*([\d.,]+\s*\w*)/i)) || colourTempFromName,
     CRI: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
-    BeamAngle: normalize(beamAngleMeasured), // ✅ measured angle only
+    BeamAngle: normalize(beamAngleMeasured), // measured angle only
 
     DriverCurrent: normalize(getValue(text, /Current:\s*([\d.,]+\s*A)/i)),
-    LuminaireLumens: normalize(getValue(text, /Output:\s*([\d.,]+\s*\w+)/i)),
+    LuminaireLumens: normalize(
+  // direct match after "Output:"
+  getValue(text, /\bOutput\b\s*:?\s*([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/) ||
+  // allow a short window in case of line breaks/odd spacing
+  getValue(text, /\bOutput\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/)
+),
     CircuitWatts: normalize(getValue(text, /Power:\s*([\d.,]+\s*\w+)/i)),
     LuminaireEfficacy: normalize(getValue(text, /Light efficiency:\s*([\d.,]+\s*\w+)/i)),
     Candelas: normalize(getValue(text, /Peak:\s*([\d.,]+\s*\w+)/i)),
@@ -63,7 +68,7 @@ let beamAngleMeasured =
     TM30_RG: normalize(getValue(text, /\bRg\b[^\d]*([\d.,]+)/i)) || normalize(getValue(text, /TM[-\s]?30[^\n]*\bRg\b[^\d]*([\d.,]+)/i)),
 
     LumenMaintenance: "",
-    Lifetime: "",
+    Lifetime: "50000",
     ForwardVoltage: normalize(getValue(text, /Voltage:\s*([\d.,]+\s*\w*)/i)),
     Current: normalize(getValue(text, /Current:\s*([\d.,]+\s*\w*)/i)),
     IPRating: "",
