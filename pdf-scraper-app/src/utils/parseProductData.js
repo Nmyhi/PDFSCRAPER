@@ -6,13 +6,29 @@ const getValue = (text, pattern) => {
   return match ? match[1].trim() : "";
 };
 
-// Helper: remove units like "W", "lm", "cd", "K", "°", "V", "A", etc.
+// Helper: normalize numeric strings safely (handles 1,250 vs 1.250,5, strips units)
 const normalize = (val) => {
   if (!val) return "";
-  return val
-    .replace(/,/g, ".")        // commas → dots
-    .replace(/[^\d.\-]/g, "")  // keep only numbers, dot, minus
-    .trim();
+  const s = String(val).trim();
+
+  // If both separators present, treat comma as decimal and dot as thousands: 1.234,5 -> 1234.5
+  if (s.includes(".") && s.includes(",")) {
+    return s.replace(/\./g, "").replace(",", ".").replace(/[^\d.\-]/g, "");
+  }
+
+  // If only comma present, decide whether it's thousands or decimal:
+  if (s.includes(",")) {
+    const parts = s.split(",");
+    // If exactly one comma and 3 digits follow -> thousands separator: 1,250 -> 1250
+    if (parts.length === 2 && parts[1].length === 3) {
+      return s.replace(/,/g, "").replace(/[^\d.\-]/g, "");
+    }
+    // Else treat comma as decimal: 12,5 -> 12.5
+    return s.replace(/,/g, ".").replace(/[^\d.\-]/g, "");
+  }
+
+  // Otherwise: just strip non-numeric (except dot and minus)
+  return s.replace(/[^\d.\-]/g, "");
 };
 
 export const parseProductData = (text, filename = "") => {
@@ -52,15 +68,27 @@ export const parseProductData = (text, filename = "") => {
     BeamAngle: normalize(beamAngleMeasured), // measured angle only
 
     DriverCurrent: normalize(getValue(text, /Current:\s*([\d.,]+\s*A)/i)),
+
     LuminaireLumens: normalize(
-  // direct match after "Output:"
-  getValue(text, /\bOutput\b\s*:?\s*([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/) ||
-  // allow a short window in case of line breaks/odd spacing
-  getValue(text, /\bOutput\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/)
-),
+      // direct match after "Output:"
+      getValue(text, /\bOutput\b\s*:?\s*([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/) ||
+      // allow a short window in case of line breaks/odd spacing
+      getValue(text, /\bOutput\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/)
+    ),
+
     CircuitWatts: normalize(getValue(text, /Power:\s*([\d.,]+\s*\w+)/i)),
     LuminaireEfficacy: normalize(getValue(text, /Light efficiency:\s*([\d.,]+\s*\w+)/i)),
-    Candelas: normalize(getValue(text, /Peak:\s*([\d.,]+\s*\w+)/i)),
+
+    Candelas: normalize(
+  getValue(
+    text,
+    /\bPeak(?:\s+intensity)?\b\s*:?\s*[\s\S]{0,200}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*(?:cd|candelas?)\b/i
+  )
+),
+
+
+
+
 
     Binning: "",
     CRI_2: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
