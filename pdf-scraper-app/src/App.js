@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PDFUploader from "./components/PDFUploader";
 import { extractTextFromPDF } from "./utils/pdfToText";
+import { parseProductData } from "./utils/parseProductData";
 import { generateExcelFromPDFs } from "./utils/pdfToExcel";
 
 function App() {
@@ -12,7 +13,8 @@ function App() {
 
     for (const file of files) {
       const text = await extractTextFromPDF(file);
-      extracted.push({ filename: file.name.replace(".pdf", ""), text });
+      const fields = parseProductData(text, file.name);
+      extracted.push({ filename: file.name.replace(".pdf", ""), fields });
     }
 
     generateExcelFromPDFs(extracted);
@@ -21,9 +23,9 @@ function App() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>📄 PDF Scraper to Excel</h2>
+      <h2>📄 PHOS PDF → Excel Extractor</h2>
       <PDFUploader onFilesSelected={handleFiles} />
-      {loading && <p>Extracting text... please wait ⏳</p>}
+      {loading && <p>Extracting data... please wait ⏳</p>}
     </div>
   );
 }
