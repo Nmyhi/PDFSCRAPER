@@ -90,25 +90,25 @@ export const parseProductData = (text, filename = "") => {
 
 
 
-    Binning: "",
+    Binning: "2",
     CRI_2: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
     TM30_RF: normalize(getValue(text, /TM[-\s]?30\s*[:\-]?\s*([\d.,]+)/i)) || normalize(getValue(text, /\bRf\b[^\d]*([\d.,]+)/i)),
     TM30_RG: normalize(getValue(text, /\bRg\b[^\d]*([\d.,]+)/i)) || normalize(getValue(text, /TM[-\s]?30[^\n]*\bRg\b[^\d]*([\d.,]+)/i)),
 
-    LumenMaintenance: "",
+    LumenMaintenance: "LM80",
     Lifetime: "50000",
     ForwardVoltage: normalize(getValue(text, /Voltage:\s*([\d.,]+\s*\w*)/i)),
     Current: normalize(getValue(text, /Current:\s*([\d.,]+\s*\w*)/i)),
-    IPRating: "",
-    IKRating: "",
-    Warranty: "",
-    FireRated: "",
-    AcousticRated: "",
-    Tube: "",
-    Cable: "",
-    EngineLmW: normalize(getValue(text, /Light efficiency:\s*([\d.,]+\s*\w+)/i)),
-    SourceLmW: "",
-    Length: "",
-    PowerFactor: normalize(getValue(text, /PF:\s*([\d.,]+)/i)),
+    IPRating: "please fill manually",
+    IKRating: "please fill manually",
+    Warranty: "5 years",
+    FireRated: "please fill manually",
+    AcousticRated: "please fill manually",
+    Tube: "please fill manually",
+    Cable: "please fill manually",
+    EngineLmW: "please fill manually",
+    SourceLmW: "please fill manually",
+    Length: "please fill manually",
+    PowerFactor: "PF value in the PDF",
   };
 };
