@@ -58,12 +58,9 @@ export const parseProductData = (text, filename = "") => {
     LightEngine: "",
 
     // ✅ Power: read ONLY from the "Power:" label (allowing line breaks/odd spacing)
-    power: normalize(
-      getValue(text, /\bPower\b\s*:?\s*([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i) ||
-      getValue(text, /\bPower\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i)
-    ),
+    power: "from filename",
 
-    colourTemp: normalize(getValue(text, /Color temperature:\s*([\d.,]+\s*\w*)/i)) || colourTempFromName,
+    colourTemp: "from filename",
     CRI: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
     BeamAngle: normalize(beamAngleMeasured), // measured angle only
 
@@ -76,7 +73,10 @@ export const parseProductData = (text, filename = "") => {
       getValue(text, /\bOutput\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/)
     ),
 
-    CircuitWatts: normalize(getValue(text, /Power:\s*([\d.,]+\s*\w+)/i)),
+    CircuitWatts: normalize(
+      getValue(text, /\bPower\b\s*:?\s*([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i) ||
+      getValue(text, /\bPower\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i)
+    ),
     LuminaireEfficacy: normalize(getValue(text, /Light efficiency:\s*([\d.,]+\s*\w+)/i)),
 
     Candelas: normalize(
@@ -92,8 +92,8 @@ export const parseProductData = (text, filename = "") => {
 
     Binning: "2",
     CRI_2: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
-    TM30_RF: normalize(getValue(text, /TM[-\s]?30\s*[:\-]?\s*([\d.,]+)/i)) || normalize(getValue(text, /\bRf\b[^\d]*([\d.,]+)/i)),
-    TM30_RG: normalize(getValue(text, /\bRg\b[^\d]*([\d.,]+)/i)) || normalize(getValue(text, /TM[-\s]?30[^\n]*\bRg\b[^\d]*([\d.,]+)/i)),
+    TM30_RF: "TM RF value in pdf",
+    TM30_RG: "TM RG value in PDF",
 
     LumenMaintenance: "LM80",
     Lifetime: "50000",
