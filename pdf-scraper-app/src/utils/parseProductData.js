@@ -32,9 +32,16 @@ const normalize = (val) => {
 };
 
 export const parseProductData = (text, filename = "") => {
-  const family = filename.split(" ")[0] || "";
-  const powerFromName = filename.match(/(\d+\.?\d*)\s*[wW]/)?.[1] || "";
-  const colourTempFromName = filename.match(/(\d{3,4})\s*[kK]/)?.[1] || "";
+  // Split filename into words
+  const nameParts = filename.replace(/\.[^/.]+$/, "").split(/\s+/);
+  const family = nameParts[0] || "";
+  const subfamily = nameParts[1] || "";
+
+  // Extract Power (e.g. "1W", "2.7W", "15W") and Colour Temp (e.g. "27K", "3000K", "40K") from filename
+  const powerFromName =
+    filename.match(/(\d+(?:\.\d+)?)\s*[wW]/)?.[1] || "";
+  const colourTempFromName =
+    filename.match(/(\d{2,4})\s*[kK]/)?.[1] || "";
 
   // ✅ Beam angle printed under the diagram: single degree with decimal on its own line
   let beamAngleMeasured =
@@ -51,25 +58,27 @@ export const parseProductData = (text, filename = "") => {
     // 3) Fallback: first decimal degree anywhere (avoids 90/60/45 axis labels)
     getValue(text, /([0-9]{1,3}[.,][0-9]{1,2})\s*°/) ||
     "";
-
+    console.log("---- RAW TEXT SAMPLE ----");
+console.log(text.slice(0, 2000)); // print the first 2000 characters
   return {
+    // --- from filename ---
     family,
-    subfamily: "",
-    LightEngine: "",
+    subfamily,
+    LightEngine: "please fill",
 
-    // ✅ Power: read ONLY from the "Power:" label (allowing line breaks/odd spacing)
-    power: "from filename",
+    // --- Power from filename ---
+    power: normalize(powerFromName),
 
-    colourTemp: "from filename",
+    // --- Colour temperature from filename ---
+    colourTemp: normalize(colourTempFromName),
+
+    // --- from PDF text ---
     CRI: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
-    BeamAngle: normalize(beamAngleMeasured), // measured angle only
-
-    DriverCurrent: normalize(getValue(text, /Current:\s*([\d.,]+\s*A)/i)),
+    BeamAngle: normalize(beamAngleMeasured),
+    DriverCurrent: "please fill",
 
     LuminaireLumens: normalize(
-      // direct match after "Output:"
       getValue(text, /\bOutput\b\s*:?\s*([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/) ||
-      // allow a short window in case of line breaks/odd spacing
       getValue(text, /\bOutput\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/)
     ),
 
@@ -77,38 +86,75 @@ export const parseProductData = (text, filename = "") => {
       getValue(text, /\bPower\b\s*:?\s*([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i) ||
       getValue(text, /\bPower\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i)
     ),
+
     LuminaireEfficacy: normalize(getValue(text, /Light efficiency:\s*([\d.,]+\s*\w+)/i)),
 
+    // ✅ Candela value from PDF summary box
     Candelas: normalize(
+      getValue(
+        text,
+        /\bPeak(?:\s+intensity)?\b\s*:?\s*[\s\S]{0,200}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*(?:cd|candelas?)\b/i
+      )
+    ),
+
+    Binning: "2",
+    CRI_2: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
+    TM30_RF: normalize(
+  // From the TM-30 table block: capture the 4th numeric on the next line (Rf)
   getValue(
     text,
-    /\bPeak(?:\s+intensity)?\b\s*:?\s*[\s\S]{0,200}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*(?:cd|candelas?)\b/i
+    /CCT\s+CRI\s+CRI\s+R9\s+TM30\s*Rf\s+TM30\s*Rg[\s\S]{0,120}?\n\s*[0-9.,]+\s*K?\s+[0-9.,]+\s+[0-9.,]+\s+([0-9]{1,3}(?:[.,][0-9]{1,2})?)/i
+  )
+  // Caption fallback: require "Fidelity index Rf" nearby to avoid axis ticks
+  || getValue(
+    text,
+    /\bRf\b[^\d]{0,5}([0-9]{1,3}(?:[.,][0-9]{1,2})?)[^\n\r]{0,80}\bFidelity\s+index\s+Rf\b/i
+  )
+),
+
+TM30_RG: normalize(
+  // From the TM-30 table block: capture the 5th numeric on the next line (Rg)
+  getValue(
+    text,
+    /CCT\s+CRI\s+CRI\s+R9\s+TM30\s*Rf\s+TM30\s*Rg[\s\S]{0,120}?\n\s*[0-9.,]+\s*K?\s+[0-9.,]+\s+[0-9.,]+\s+[0-9.,]+\s+([0-9]{1,3}(?:[.,][0-9]{1,2})?)/i
+  )
+  // Caption fallback: require "Gamut index Rg" nearby to avoid axis ticks
+  || getValue(
+    text,
+    /\bRg\b[^\d]{0,5}([0-9]{1,3}(?:[.,][0-9]{1,2})?)[^\n\r]{0,80}\bGamut\s+index\s+Rg\b/i
   )
 ),
 
 
 
 
-
-    Binning: "2",
-    CRI_2: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
-    TM30_RF: "TM RF value in pdf",
-    TM30_RG: "TM RG value in PDF",
-
     LumenMaintenance: "LM80",
     Lifetime: "50000",
-    ForwardVoltage: normalize(getValue(text, /Voltage:\s*([\d.,]+\s*\w*)/i)),
+    ForwardVoltage: "please fill",
     Current: normalize(getValue(text, /Current:\s*([\d.,]+\s*\w*)/i)),
-    IPRating: "please fill manually",
-    IKRating: "please fill manually",
+
+    IPRating: "please fill",
+    IKRating: "please fill",
     Warranty: "5 years",
-    FireRated: "please fill manually",
-    AcousticRated: "please fill manually",
-    Tube: "please fill manually",
-    Cable: "please fill manually",
-    EngineLmW: "please fill manually",
-    SourceLmW: "please fill manually",
-    Length: "please fill manually",
-    PowerFactor: "PF value in the PDF",
+    FireRated: "please fill",
+    AcousticRated: "please fill",
+    Tube: "please fill",
+    Cable: "please fill",
+    EngineLmW: "please fill",
+    SourceLmW: "please fill",
+    Length: "please fill",
+    PowerFactor: normalize(
+  // PF: ... (skip numbers that have lm/cd/W), then take 0.xxx or 1.00
+  getValue(
+    text,
+    /\bPF\b\s*:?\s*(?:[^0-9]*(?:\d+(?:[.,]\d+)?\s*(?:lm|cd|[Ww])\b))*[^0-9]*((?:0(?:[.,]\d{1,3})?|1(?:[.,]0{1,3})?))\b(?!\s*(?:lm|cd|[Ww])\b)/i
+  )
+  ||
+  // Power factor: ... (same logic)
+  getValue(
+    text,
+    /\bPower\s*factor\b\s*:?\s*(?:[^0-9]*(?:\d+(?:[.,]\d+)?\s*(?:lm|cd|[Ww])\b))*[^0-9]*((?:0(?:[.,]\d{1,3})?|1(?:[.,]0{1,3})?))\b(?!\s*(?:lm|cd|[Ww])\b)/i
+  )
+),
   };
 };
