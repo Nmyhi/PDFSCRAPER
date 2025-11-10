@@ -131,7 +131,7 @@ TM30_RG: normalize(
     LumenMaintenance: "LM80",
     Lifetime: "50000",
     ForwardVoltage: "please fill",
-    Current: normalize(getValue(text, /Current:\s*([\d.,]+\s*\w*)/i)),
+    Current: "please fill",
 
     IPRating: "please fill",
     IKRating: "please fill",
