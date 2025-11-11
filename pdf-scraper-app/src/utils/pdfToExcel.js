@@ -12,8 +12,9 @@ export const generateExcelFromPDFs = (dataArray) => {
     "power": data.fields.power,
     "colour temp": data.fields.colourTemp,
     "CRI": data.fields.CRI,
-    "Beam Angle": data.fields.BeamAngle,
+    "Beam Angle": data.fields.BeamAngle, //this value should come from the filename
     "Driver Current": data.fields.DriverCurrent,
+    //"Beam angle measured": current beam angle
     "Luminaire lumens": data.fields.LuminaireLumens,
     "Circuit Watts": data.fields.CircuitWatts,
     "Luminaire Efficacy": data.fields.LuminaireEfficacy,
