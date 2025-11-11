@@ -42,6 +42,8 @@ export const parseProductData = (text, filename = "") => {
     filename.match(/(\d+(?:\.\d+)?)\s*[wW]/)?.[1] || "";
   const colourTempFromName =
     filename.match(/(\d{2,4})\s*[kK]/)?.[1] || "";
+  const beamAngleFromName =
+    filename.match(/(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:°|deg)/i)?.[1] || "";
 
   // ✅ Beam angle printed under the diagram: single degree with decimal on its own line
   let beamAngleMeasured =
@@ -71,6 +73,9 @@ console.log(text.slice(0, 2000)); // print the first 2000 characters
 
     // --- Colour temperature from filename ---
     colourTemp: normalize(colourTempFromName),
+
+    // --- BeamAngle from filename ---
+    BeamAngleFileName: normalize(beamAngleFromName),
 
     // --- from PDF text ---
     CRI: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
