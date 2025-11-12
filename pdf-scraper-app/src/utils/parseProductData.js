@@ -43,7 +43,10 @@ export const parseProductData = (text, filename = "") => {
   const colourTempFromName =
     filename.match(/(\d{2,4})\s*[kK]/)?.[1] || "";
   const beamAngleFromName =
-    filename.match(/(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:°|deg)/i)?.[1] || "";
+  normalize(
+    filename
+      .match(/(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:°|deg)?/i)?.[1] || ""
+  );
 
   // ✅ Beam angle printed under the diagram: single degree with decimal on its own line
   let beamAngleMeasured =
