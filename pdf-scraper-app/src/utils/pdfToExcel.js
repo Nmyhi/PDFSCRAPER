@@ -16,9 +16,8 @@ export const generateExcelFromPDFs = (dataArray) => {
 
     // Internal distinction (two different keys)
     "Beam Angle (FileName)": data.fields.BeamAngleFileName,
-    "Beam Angle (PDF)": data.fields.BeamAngle,
-
     "Driver Current": data.fields.DriverCurrent,
+    "Beam Angle (PDF)": data.fields.BeamAngle,
     "Luminaire lumens": data.fields.LuminaireLumens,
     "Circuit Watts": data.fields.CircuitWatts,
     "Luminaire Efficacy": data.fields.LuminaireEfficacy,
