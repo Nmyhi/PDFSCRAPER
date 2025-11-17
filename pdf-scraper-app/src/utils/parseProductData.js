@@ -81,7 +81,7 @@ console.log(text.slice(0, 2000)); // print the first 2000 characters
     BeamAngleFileName: normalize(beamAngleFromName),
 
     // --- from PDF text ---
-    CRI: normalize(getValue(text, /CRI[:\s]+([\d.,]+)/i)),
+    CRI: "please fill",
     BeamAngle: normalize(beamAngleMeasured),
     DriverCurrent: "please fill",
 
