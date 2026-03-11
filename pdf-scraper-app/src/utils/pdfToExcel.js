@@ -13,7 +13,6 @@ export const generateExcelFromPDFs = (dataArray) => {
     power: data.fields.power,
     "colour temp": data.fields.colourTemp,
     CRI: data.fields.CRI,
-
     // Internal distinction (two different keys)
     "Beam Angle (FileName)": data.fields.BeamAngleFileName,
     "Driver Current": data.fields.DriverCurrent,
@@ -46,9 +45,7 @@ export const generateExcelFromPDFs = (dataArray) => {
   // Create sheet
   const worksheet = XLSX.utils.json_to_sheet(rows);
 
-  // ✅ Rename headers to display the same name ("Beam Angle")
-  if (worksheet["H1"]) worksheet["H1"].v = "Beam Angle"; // column for BeamAngle (FileName)
-  if (worksheet["I1"]) worksheet["I1"].v = "Beam Angle"; // column for BeamAngle (PDF)
+  
 
   // Append and save
   XLSX.utils.book_append_sheet(workbook, worksheet, "Product Data");
