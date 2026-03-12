@@ -50,19 +50,10 @@ export const parseProductData = (text, filename = "") => {
 
   // ✅ Beam angle printed under the diagram: single degree with decimal on its own line
   let beamAngleMeasured =
-    // 1) A standalone "xx.x°" on its own line (most reliable for the diagram caption)
-    getValue(
-      text,
-      /(?:^|\r?\n)\s*([0-9]{1,3}[.,][0-9]{1,2})\s*°\s*(?:\r?\n|$)/m
-    ) ||
-    // 2) Within common diagram sections ("Iso", "Beam", etc.) then a standalone degree on a near line
-    getValue(
-      text,
-      /(Iso[\s-]*candela|Iso[\s-]*lux|Iso\s*Diagrams|Beam\s*details|Beam\s*center)[\s\S]{0,500}?\r?\n\s*([0-9]{1,3}[.,][0-9]{1,2})\s*°/i
-    ) ||
-    // 3) Fallback: first decimal degree anywhere (avoids 90/60/45 axis labels)
-    getValue(text, /([0-9]{1,3}[.,][0-9]{1,2})\s*°/) ||
-    "";
+  getValue(
+    text,
+    /([0-9]{1,3}(?:[.,][0-9]{1,2})?)\s*°\s*PHOS\b/i
+  ) || "";
     console.log("---- RAW TEXT SAMPLE ----");
 console.log(text.slice(0, 2000)); // print the first 2000 characters
   return {
