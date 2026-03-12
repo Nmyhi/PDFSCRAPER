@@ -1,0 +1,62 @@
+{
+  "STD1": {
+    "forwardVoltage": "2.78",
+    "driverCurrent": "350"
+  },
+  "ACT1": {
+    "forwardVoltage": "2.78",
+    "driverCurrent": "350"
+  },
+  "STD3": {
+    "forwardVoltage": "2.97",
+    "driverCurrent": "1050"
+  },
+  "ACT3": {
+    "forwardVoltage": "2.97",
+    "driverCurrent": "1050"
+  },
+  "STD4": {
+    "forwardVoltage": "11.78",
+    "driverCurrent": "350"
+  },
+  "STD9": {
+    "forwardVoltage": "12.36",
+    "driverCurrent": "700"
+  },
+  "STD14": {
+    "forwardVoltage": "12.65",
+    "driverCurrent": "1050"
+  },
+  "PLT8": {
+    "forwardVoltage": "31.4",
+    "driverCurrent": "250"
+  },
+  "PLT11": {
+    "forwardVoltage": "31.6",
+    "driverCurrent": "350"
+  },
+  "DTW6": {
+    "forwardVoltage": "17",
+    "driverCurrent": "350"
+  },
+  "DTW12": {
+    "forwardVoltage": "33.8",
+    "driverCurrent": "350"
+  },
+  "HE13": {
+    "forwardVoltage": "18.2",
+    "driverCurrent": "700"
+  },
+  "GEN13": {
+    "forwardVoltage": "18.2",
+    "driverCurrent": "700"
+  },
+  "GENTN9": {
+    "forwardVoltage": "36",
+    "driverCurrent": "250"
+  },
+  "HE20": {
+    "forwardVoltage": "19.6",
+    "driverCurrent": "1050"
+  }
+}
