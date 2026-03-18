@@ -58,5 +58,17 @@
   "HE20": {
     "forwardVoltage": "19.6",
     "driverCurrent": "1050"
+  },
+  "3HE6": {
+    "forwardVoltage": "17.1",
+    "driverCurrent": "350"
+  },
+  "4HE11": {
+    "forwardVoltage": "18.33",
+    "driverCurrent": "600"
+  },
+  "4GEN11": {
+    "forwardVoltage": "18.33",
+    "driverCurrent": "600"
   }
 }
