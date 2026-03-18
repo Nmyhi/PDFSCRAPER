@@ -155,7 +155,7 @@ export const parseProductData = (text, filename = "") => {
     LumenMaintenance: "LM80",
     Lifetime: "50000",
     ForwardVoltage: referenceValues.ForwardVoltage,
-    Current: "please fill",
+    Current: referenceValues.DriverCurrent,
 
     IPRating: "please fill",
     IKRating: "please fill",
