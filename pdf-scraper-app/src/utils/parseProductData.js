@@ -106,9 +106,15 @@ export const parseProductData = (text, filename = "") => {
     DriverCurrent: referenceValues.DriverCurrent,
 
     LuminaireLumens: normalize(
-      getValue(text, /\bOutput\b\s*:?\s*([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/) ||
-      getValue(text, /\bOutput\b\s*:?\s*[\s\S]{0,60}?([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/)
-    ),
+  getValue(
+    text,
+    /\bOutput\b\s*:?\s*\bPeak\b\s*:?\s*\bPower\b\s*:?\s*\bPF\b\s*:?\s*([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/i
+  ) ||
+  getValue(
+    text,
+    /\bPF\b\s*:?\s*([0-9]{1,6}(?:[.,][0-9]{1,2})?)\s*[lL][mM]\b/i
+  )
+),
 
     CircuitWatts: normalize(
       getValue(text, /\bPower\b\s*:?\s*([0-9]{1,3}(?:[.,][0-9]{1,3})?)\s*[Ww]\b/i) ||
