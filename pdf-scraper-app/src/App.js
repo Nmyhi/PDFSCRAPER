@@ -23,7 +23,7 @@ function App() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>📄 PHOS PDF → Excel Extractor</h2>
+      <h2>📄 PHOS Photometric PDF → Excel Extractor</h2>
       <PDFUploader onFilesSelected={handleFiles} />
       {loading && <p>Extracting data... please wait ⏳</p>}
     </div>
