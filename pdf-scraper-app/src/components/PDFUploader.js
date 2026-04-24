@@ -5,7 +5,7 @@ function PDFUploader({ onFilesSelected }) {
   const [files, setFiles] = useState([]);
 
   const bulbs = useMemo(() => {
-    const emojis = ["💡", "🔦", "✨", "🔆", "🔅", "🕯️", "🏮", "🪔"];
+    const emojis = ["💡", "🔦", "✨", "🔆", "🔅", "🕯️", "☀️", "⚡","⚙️","🔥"];
 
     return Array.from({ length: 80 }, (_, i) => ({
       id: i,
