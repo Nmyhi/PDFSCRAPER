@@ -60,15 +60,15 @@
     "driverCurrent": "1050"
   },
   "3HE6": {
-    "forwardVoltage": "17.1",
+    "forwardVoltage": "19.5",
     "driverCurrent": "350"
   },
   "4HE11": {
-    "forwardVoltage": "18.33",
+    "forwardVoltage": "19.7",
     "driverCurrent": "600"
   },
   "4GEN11": {
-    "forwardVoltage": "18.33",
+    "forwardVoltage": "19.7",
     "driverCurrent": "600"
   }
 }
