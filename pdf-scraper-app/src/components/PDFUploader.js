@@ -1,22 +1,127 @@
 // src/components/PDFUploader.js
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 function PDFUploader({ onFilesSelected }) {
   const [files, setFiles] = useState([]);
+  const [particles, setParticles] = useState([]);
+  const [isHoveringButton, setIsHoveringButton] = useState(false);
 
-  const bulbs = useMemo(() => {
-    const emojis = ["💡", "🔦", "✨", "🔆", "🔅", "🕯️", "☀️", "⚡","⚙️","🔥"];
+  const [mouseGlow, setMouseGlow] = useState({
+    x: -100,
+    y: -100
+  });
 
-    return Array.from({ length: 80 }, (_, i) => ({
+  const mouseRef = useRef({ x: -9999, y: -9999 });
+  const animationRef = useRef(null);
+
+  useEffect(() => {
+    const emojis = ["💡", "🔦", "✨", "🔆", "🔅", "🕯️", "☀️", "⚡", "⚙️", "🔥"];
+
+    const createdParticles = Array.from({ length: 60 }, (_, i) => ({
       id: i,
-      left: -15 + Math.random() * 130,
-      top: -20 - Math.random() * 80,
-      delay: Math.random() * 8,
-      duration: 5 + Math.random() * 6,
-      size: 20 + Math.random() * 28,
-      opacity: 0.25 + Math.random() * 0.5,
+      x: Math.random() * window.innerWidth,
+      y: -Math.random() * window.innerHeight,
+      baseVx: 0.9 + Math.random() * 1.8,
+      baseVy: 3.2 + Math.random() * 3.8,
+      vx: 0.9 + Math.random() * 1.8,
+      vy: 3.2 + Math.random() * 3.8,
+      size: 18 + Math.random() * 28,
+      opacity: 0.3 + Math.random() * 0.55,
+      rotation: Math.random() * 360,
+      spin: -2 + Math.random() * 4,
       emoji: emojis[Math.floor(Math.random() * emojis.length)]
     }));
+
+    setParticles(createdParticles);
+
+    const handleMouseMove = (e) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+
+      setMouseGlow({
+        x: e.clientX,
+        y: e.clientY
+      });
+    };
+
+    const handleMouseLeave = () => {
+      mouseRef.current = { x: -9999, y: -9999 };
+
+      setMouseGlow({
+        x: -100,
+        y: -100
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseleave", handleMouseLeave);
+
+    const animate = () => {
+      setParticles((prev) =>
+        prev.map((p) => {
+          let { x, y, vx, vy, rotation } = p;
+
+          x += vx;
+          y += vy;
+          rotation += p.spin;
+
+          const dx = x - mouseRef.current.x;
+          const dy = y - mouseRef.current.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const radius = 90;
+
+          if (distance < radius) {
+            const force = (radius - distance) / radius;
+            const angle = Math.atan2(dy, dx);
+
+            vx += Math.cos(angle) * force * 1.8;
+            vy += Math.sin(angle) * force * 1.8;
+          }
+
+          vx *= 0.96;
+          vy *= 0.96;
+
+          vx += p.baseVx * 0.04;
+          vy += p.baseVy * 0.04;
+
+          if (y > window.innerHeight + 80 || x > window.innerWidth + 80) {
+            x = Math.random() * window.innerWidth - 100;
+            y = -80 - Math.random() * 200;
+
+            const newBaseVx = 0.9 + Math.random() * 1.8;
+            const newBaseVy = 3.2 + Math.random() * 3.8;
+
+            p.baseVx = newBaseVx;
+            p.baseVy = newBaseVy;
+
+            vx = newBaseVx;
+            vy = newBaseVy;
+          }
+
+          if (x < -120) {
+            x = Math.random() * window.innerWidth;
+          }
+
+          return {
+            ...p,
+            x,
+            y,
+            vx,
+            vy,
+            rotation
+          };
+        })
+      );
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseleave", handleMouseLeave);
+      cancelAnimationFrame(animationRef.current);
+    };
   }, []);
 
   const mergePdfFiles = (incomingFiles) => {
@@ -60,21 +165,31 @@ function PDFUploader({ onFilesSelected }) {
 
   return (
     <div style={styles.page}>
+      <div
+        style={{
+          ...styles.cursorGlow,
+          ...(isHoveringButton ? styles.cursorGlowActive : {}),
+          left: mouseGlow.x,
+          top: mouseGlow.y
+        }}
+      >
+        💡
+      </div>
+
       <div style={styles.background}>
-        {bulbs.map((bulb) => (
+        {particles.map((p) => (
           <div
-            key={bulb.id}
+            key={p.id}
             style={{
               ...styles.bulb,
-              left: `${bulb.left}vw`,
-              top: `${bulb.top}vh`,
-              animationDelay: `${bulb.delay}s`,
-              animationDuration: `${bulb.duration}s`,
-              fontSize: `${bulb.size}px`,
-              opacity: bulb.opacity
+              left: 0,
+              top: 0,
+              fontSize: `${p.size}px`,
+              opacity: p.opacity,
+              transform: `translate3d(${p.x}px, ${p.y}px, 0) rotate(${p.rotation}deg)`
             }}
           >
-            {bulb.emoji}
+            {p.emoji}
           </div>
         ))}
       </div>
@@ -85,7 +200,11 @@ function PDFUploader({ onFilesSelected }) {
         <h2 style={styles.title}>PDF Scraper</h2>
 
         <div style={styles.buttonRow}>
-          <label style={styles.button}>
+          <label
+            style={styles.button}
+            onMouseEnter={() => setIsHoveringButton(true)}
+            onMouseLeave={() => setIsHoveringButton(false)}
+          >
             📄 Select PDF Files
             <input
               type="file"
@@ -96,7 +215,11 @@ function PDFUploader({ onFilesSelected }) {
             />
           </label>
 
-          <label style={styles.button}>
+          <label
+            style={styles.button}
+            onMouseEnter={() => setIsHoveringButton(true)}
+            onMouseLeave={() => setIsHoveringButton(false)}
+          >
             📁 Select Folder
             <input
               type="file"
@@ -109,7 +232,12 @@ function PDFUploader({ onFilesSelected }) {
             />
           </label>
 
-          <button style={styles.clearButton} onClick={clearFiles}>
+          <button
+            style={styles.clearButton}
+            onClick={clearFiles}
+            onMouseEnter={() => setIsHoveringButton(true)}
+            onMouseLeave={() => setIsHoveringButton(false)}
+          >
             ❌ Clear
           </button>
 
@@ -120,6 +248,8 @@ function PDFUploader({ onFilesSelected }) {
             }}
             onClick={handleScrape}
             disabled={files.length === 0}
+            onMouseEnter={() => setIsHoveringButton(true)}
+            onMouseLeave={() => setIsHoveringButton(false)}
           >
             🥄 Scrape & Export Excel
           </button>
@@ -139,19 +269,6 @@ function PDFUploader({ onFilesSelected }) {
           </div>
         )}
       </div>
-
-      <style>
-        {`
-          @keyframes fallDiagonal {
-            0% {
-              transform: translate3d(0, 0, 0) rotate(0deg);
-            }
-            100% {
-              transform: translate3d(35vw, 130vh, 0) rotate(360deg);
-            }
-          }
-        `}
-      </style>
     </div>
   );
 }
@@ -164,6 +281,7 @@ const styles = {
     minHeight: "100vh",
     overflow: "hidden",
     padding: 24,
+    cursor: "none",
     background:
       "linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #334155 100%)",
     fontFamily: "sans-serif"
@@ -179,20 +297,50 @@ const styles = {
     zIndex: 0
   },
 
+  cursorGlow: {
+    position: "fixed",
+    width: 42,
+    height: 42,
+
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+
+    transform: "translate(-50%, -50%)",
+
+    fontSize: 26,
+
+    pointerEvents: "none",
+    zIndex: 9999,
+
+    filter: `
+      drop-shadow(0 0 6px rgba(255, 230, 90, 0.95))
+      drop-shadow(0 0 14px rgba(255, 210, 70, 0.8))
+      drop-shadow(0 0 24px rgba(255, 190, 40, 0.45))
+    `,
+
+    transition: "transform 0.03s linear"
+  },
+
+  cursorGlowActive: {
+    filter: `
+      drop-shadow(0 0 6px rgba(255, 80, 80, 1))
+      drop-shadow(0 0 14px rgba(239, 68, 68, 0.9))
+      drop-shadow(0 0 28px rgba(220, 38, 38, 0.6))
+    `
+  },
+
   bulb: {
     position: "absolute",
     userSelect: "none",
-    animationName: "fallDiagonal",
-    animationTimingFunction: "linear",
-    animationIterationCount: "infinite",
     willChange: "transform",
-    filter: "drop-shadow(0 0 12px rgba(255, 220, 100, 0.6))"
+    filter: "drop-shadow(0 0 8px rgba(255, 220, 100, 0.45))"
   },
 
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(15, 23, 42, 0.08)",
+    background: "rgba(15, 23, 42, 0.05)",
     zIndex: 1,
     pointerEvents: "none"
   },
@@ -234,7 +382,7 @@ const styles = {
     background: "#4f46e5",
     color: "white",
     borderRadius: 8,
-    cursor: "pointer",
+    cursor: "none",
     fontWeight: 500,
     transition: "0.2s",
     border: "none",
@@ -246,7 +394,7 @@ const styles = {
     background: "#ef4444",
     color: "white",
     borderRadius: 8,
-    cursor: "pointer",
+    cursor: "none",
     border: "none",
     fontWeight: 500,
     boxShadow: "0 4px 12px rgba(239, 68, 68, 0.25)"
@@ -257,7 +405,7 @@ const styles = {
     background: "#16a34a",
     color: "white",
     borderRadius: 8,
-    cursor: "pointer",
+    cursor: "none",
     border: "none",
     fontWeight: 600,
     fontSize: 15,
