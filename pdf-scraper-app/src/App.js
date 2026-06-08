@@ -22,47 +22,54 @@ function App() {
   };
 
   const styles = {
-  page: {
-    padding: 20,
-    textAlign: "center"
-  },
+    page: {
+      padding: 20,
+      textAlign: "center"
+    },
 
-  title: {
-    fontSize: "clamp(28px, 4vw, 48px)",
-    fontWeight: 800,
-    marginBottom: 30,
-    letterSpacing: "-0.5px",
+    header: {
+      width: "100%",
+      display: "flex",
+      justifyContent: "flex-start",
+      alignItems: "center",
+      marginBottom: 30
+    },
 
-    background: "linear-gradient(90deg, #050505, #e98d71, #f33e07)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
+    titleImage: {
+      width: "280px",
+      maxWidth: "90%",
+      height: "auto",
+      objectFit: "contain",
+      marginLeft: "-10px",
+      filter: "drop-shadow(0 0 18px rgba(255,255,255,0.2))"
+    },
 
-    textAlign: "center",
-    textShadow: "0 4px 20px rgba(0,0,0,0.25)"
-  },
-
-  loading: {
-    marginTop: 20,
-    color: "#e5e7eb",
-    fontSize: 16
-  }
-};
+    loading: {
+      marginTop: 20,
+      color: "#e5e7eb",
+      fontSize: 16
+    }
+  };
 
   return (
-  <div style={styles.page}>
-    <h1 style={styles.title}>
-      PHOS Photometric PDF Excel Extractor
-    </h1>
+    <div style={styles.page}>
+      <header style={styles.header}>
+        <img
+          src="/phos-title.png"
+          alt="PHOS Photometric PDF Excel Extractor"
+          style={styles.titleImage}
+        />
+      </header>
 
-    <PDFUploader onFilesSelected={handleFiles} />
+      <PDFUploader onFilesSelected={handleFiles} />
 
-    {loading && (
-      <p style={styles.loading}>
-        Extracting data... please wait ⏳
-      </p>
-    )}
-  </div>
-);
+      {loading && (
+        <p style={styles.loading}>
+          Extracting data... please wait ⏳
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default App;
