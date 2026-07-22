@@ -40,6 +40,8 @@ export const generateExcelFromPDFs = (dataArray) => {
     "Source Lm/W": data.fields.SourceLmW,
     Length: data.fields.Length,
     "Power Factor": data.fields.PowerFactor,
+    // Average of the 190 UGR values
+    AVGUGR: data.fields.AVGUGR,
   }));
 
   // Create sheet

@@ -54,6 +54,35 @@ const getReferenceValuesFromFilename = (filename = "") => {
   };
 };
 
+// Extract the 190 UGR values, calculate their average, and round down
+const extractAVGUGR = (text = "") => {
+  const ugrSectionMatch = text.match(
+    /2H\s+2H\s+([\s\S]*?)Variation\s+of\s+the\s+observer\s+position\s+for\s+the\s+luminaire\s+distance/i
+  );
+
+  if (!ugrSectionMatch) {
+    console.warn("AVGUGR: UGR data section not found");
+    return "";
+  }
+
+  const values =
+    ugrSectionMatch[1]
+      .match(/\b\d+(?:[.,]\d+)?\b/g)
+      ?.map((value) => Number(value.replace(",", "."))) || [];
+
+  if (values.length !== 190) {
+    console.warn(
+      `AVGUGR: Expected 190 UGR values, but found ${values.length}`
+    );
+    return "";
+  }
+
+  const total = values.reduce((sum, value) => sum + value, 0);
+  const average = total / 190;
+
+  return Math.floor(average);
+};
+
 export const parseProductData = (text, filename = "") => {
   // Split filename into words
   const nameParts = filename.replace(/\.[^/.]+$/, "").split(/\s+/);
@@ -80,7 +109,7 @@ export const parseProductData = (text, filename = "") => {
   const referenceValues = getReferenceValuesFromFilename(filename);
 
   console.log("---- RAW TEXT SAMPLE ----");
-  console.log(text.slice(0, 2000));
+  console.log(text);
   console.log("---- REFERENCE LOOKUP ----");
   console.log("filename:", filename);
   console.log("reference values:", referenceValues);
@@ -184,5 +213,8 @@ export const parseProductData = (text, filename = "") => {
         /\bPower\s*factor\b\s*:?\s*(?:[^0-9]*(?:\d+(?:[.,]\d+)?\s*(?:lm|cd|[Ww])\b))*[^0-9]*((?:0(?:[.,]\d{1,3})?|1(?:[.,]0{1,3})?))\b(?!\s*(?:lm|cd|[Ww])\b)/i
       )
     ),
+
+    AVGUGR: extractAVGUGR(text),
+    
   };
 };
