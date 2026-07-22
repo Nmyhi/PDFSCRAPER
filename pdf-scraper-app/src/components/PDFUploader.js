@@ -1,4 +1,5 @@
 // src/components/PDFUploader.js
+
 import React, { useEffect, useRef, useState } from "react";
 
 function PDFUploader({ onFilesSelected }) {
@@ -6,16 +7,35 @@ function PDFUploader({ onFilesSelected }) {
   const [particles, setParticles] = useState([]);
   const [isHoveringButton, setIsHoveringButton] = useState(false);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processedFiles, setProcessedFiles] = useState(0);
+  const [totalFiles, setTotalFiles] = useState(0);
+
   const [mouseGlow, setMouseGlow] = useState({
     x: -100,
-    y: -100
+    y: -100,
   });
 
-  const mouseRef = useRef({ x: -9999, y: -9999 });
+  const mouseRef = useRef({
+    x: -9999,
+    y: -9999,
+  });
+
   const animationRef = useRef(null);
 
   useEffect(() => {
-    const emojis = ["💡", "🔦", "✨", "🔆", "🔅", "🕯️", "☀️", "⚡", "⚙️", "🔥"];
+    const emojis = [
+      "💡",
+      "🔦",
+      "✨",
+      "🔆",
+      "🔅",
+      "🕯️",
+      "☀️",
+      "⚡",
+      "⚙️",
+      "🔥",
+    ];
 
     const createdParticles = Array.from({ length: 60 }, (_, i) => ({
       id: i,
@@ -29,26 +49,32 @@ function PDFUploader({ onFilesSelected }) {
       opacity: 0.3 + Math.random() * 0.55,
       rotation: Math.random() * 360,
       spin: -2 + Math.random() * 4,
-      emoji: emojis[Math.floor(Math.random() * emojis.length)]
+      emoji: emojis[Math.floor(Math.random() * emojis.length)],
     }));
 
     setParticles(createdParticles);
 
-    const handleMouseMove = (e) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
+    const handleMouseMove = (event) => {
+      mouseRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+      };
 
       setMouseGlow({
-        x: e.clientX,
-        y: e.clientY
+        x: event.clientX,
+        y: event.clientY,
       });
     };
 
     const handleMouseLeave = () => {
-      mouseRef.current = { x: -9999, y: -9999 };
+      mouseRef.current = {
+        x: -9999,
+        y: -9999,
+      };
 
       setMouseGlow({
         x: -100,
-        y: -100
+        y: -100,
       });
     };
 
@@ -56,20 +82,28 @@ function PDFUploader({ onFilesSelected }) {
     window.addEventListener("mouseleave", handleMouseLeave);
 
     const animate = () => {
-      setParticles((prev) =>
-        prev.map((p) => {
-          let { x, y, vx, vy, rotation } = p;
+      setParticles((previousParticles) =>
+        previousParticles.map((particle) => {
+          let {
+            x,
+            y,
+            vx,
+            vy,
+            rotation,
+            baseVx,
+            baseVy,
+          } = particle;
 
           x += vx;
           y += vy;
-          rotation += p.spin;
+          rotation += particle.spin;
 
           const dx = x - mouseRef.current.x;
           const dy = y - mouseRef.current.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           const radius = 90;
 
-          if (distance < radius) {
+          if (distance > 0 && distance < radius) {
             const force = (radius - distance) / radius;
             const angle = Math.atan2(dy, dx);
 
@@ -80,21 +114,21 @@ function PDFUploader({ onFilesSelected }) {
           vx *= 0.96;
           vy *= 0.96;
 
-          vx += p.baseVx * 0.04;
-          vy += p.baseVy * 0.04;
+          vx += baseVx * 0.04;
+          vy += baseVy * 0.04;
 
-          if (y > window.innerHeight + 80 || x > window.innerWidth + 80) {
+          if (
+            y > window.innerHeight + 80 ||
+            x > window.innerWidth + 80
+          ) {
             x = Math.random() * window.innerWidth - 100;
             y = -80 - Math.random() * 200;
 
-            const newBaseVx = 0.9 + Math.random() * 1.8;
-            const newBaseVy = 3.2 + Math.random() * 3.8;
+            baseVx = 0.9 + Math.random() * 1.8;
+            baseVy = 3.2 + Math.random() * 3.8;
 
-            p.baseVx = newBaseVx;
-            p.baseVy = newBaseVy;
-
-            vx = newBaseVx;
-            vy = newBaseVy;
+            vx = baseVx;
+            vy = baseVy;
           }
 
           if (x < -120) {
@@ -102,12 +136,14 @@ function PDFUploader({ onFilesSelected }) {
           }
 
           return {
-            ...p,
+            ...particle,
             x,
             y,
             vx,
             vy,
-            rotation
+            baseVx,
+            baseVy,
+            rotation,
           };
         })
       );
@@ -120,7 +156,10 @@ function PDFUploader({ onFilesSelected }) {
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseleave", handleMouseLeave);
-      cancelAnimationFrame(animationRef.current);
+
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
   }, []);
 
@@ -131,65 +170,109 @@ function PDFUploader({ onFilesSelected }) {
         file.name.toLowerCase().endsWith(".pdf")
     );
 
-    setFiles((prev) => {
-      const map = new Map();
+    setFiles((previousFiles) => {
+      const fileMap = new Map();
 
-      [...prev, ...pdfsOnly].forEach((file) => {
-        const key = file.webkitRelativePath || `${file.name}-${file.size}`;
-        map.set(key, file);
+      [...previousFiles, ...pdfsOnly].forEach((file) => {
+        const key =
+          file.webkitRelativePath ||
+          `${file.name}-${file.size}-${file.lastModified}`;
+
+        fileMap.set(key, file);
       });
 
-      return Array.from(map.values());
+      return Array.from(fileMap.values());
     });
   };
 
-  const handleFileChange = (e) => {
-    const selected = Array.from(e.target.files || []);
-    mergePdfFiles(selected);
-    e.target.value = "";
+  const handleFileChange = (event) => {
+    const selectedFiles = Array.from(event.target.files || []);
+
+    mergePdfFiles(selectedFiles);
+
+    event.target.value = "";
   };
 
-  const handleFolderChange = (e) => {
-    const selected = Array.from(e.target.files || []);
-    mergePdfFiles(selected);
-    e.target.value = "";
+  const handleFolderChange = (event) => {
+    const selectedFiles = Array.from(event.target.files || []);
+
+    mergePdfFiles(selectedFiles);
+
+    event.target.value = "";
   };
 
-  const handleScrape = () => {
-    onFilesSelected(files);
+  const handleScrape = async () => {
+    if (
+      files.length === 0 ||
+      isProcessing ||
+      typeof onFilesSelected !== "function"
+    ) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setProcessedFiles(0);
+    setTotalFiles(files.length);
+
+    try {
+      await onFilesSelected(files, (completed) => {
+        setProcessedFiles(completed);
+      });
+    } catch (error) {
+      console.error("PDF processing failed:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const clearFiles = () => {
+    if (isProcessing) {
+      return;
+    }
+
     setFiles([]);
+    setProcessedFiles(0);
+    setTotalFiles(0);
   };
+
+  const progressPercentage =
+    totalFiles > 0
+      ? Math.round((processedFiles / totalFiles) * 100)
+      : 0;
 
   return (
     <div style={styles.page}>
       <div
         style={{
           ...styles.cursorGlow,
-          ...(isHoveringButton ? styles.cursorGlowActive : {}),
+          ...(isHoveringButton
+            ? styles.cursorGlowActive
+            : {}),
           left: mouseGlow.x,
-          top: mouseGlow.y
+          top: mouseGlow.y,
         }}
       >
         💡
       </div>
 
       <div style={styles.background}>
-        {particles.map((p) => (
+        {particles.map((particle) => (
           <div
-            key={p.id}
+            key={particle.id}
             style={{
               ...styles.bulb,
               left: 0,
               top: 0,
-              fontSize: `${p.size}px`,
-              opacity: p.opacity,
-              transform: `translate3d(${p.x}px, ${p.y}px, 0) rotate(${p.rotation}deg)`
+              fontSize: `${particle.size}px`,
+              opacity: particle.opacity,
+              transform: `translate3d(
+                ${particle.x}px,
+                ${particle.y}px,
+                0
+              ) rotate(${particle.rotation}deg)`,
             }}
           >
-            {p.emoji}
+            {particle.emoji}
           </div>
         ))}
       </div>
@@ -201,70 +284,159 @@ function PDFUploader({ onFilesSelected }) {
 
         <div style={styles.buttonRow}>
           <label
-            style={styles.button}
-            onMouseEnter={() => setIsHoveringButton(true)}
-            onMouseLeave={() => setIsHoveringButton(false)}
+            style={{
+              ...styles.button,
+              opacity: isProcessing ? 0.6 : 1,
+            }}
+            onMouseEnter={() =>
+              setIsHoveringButton(true)
+            }
+            onMouseLeave={() =>
+              setIsHoveringButton(false)
+            }
           >
             📄 Select PDF Files
+
             <input
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,.pdf"
               multiple
+              disabled={isProcessing}
               onChange={handleFileChange}
               style={styles.hiddenInput}
             />
           </label>
 
           <label
-            style={styles.button}
-            onMouseEnter={() => setIsHoveringButton(true)}
-            onMouseLeave={() => setIsHoveringButton(false)}
+            style={{
+              ...styles.button,
+              opacity: isProcessing ? 0.6 : 1,
+            }}
+            onMouseEnter={() =>
+              setIsHoveringButton(true)
+            }
+            onMouseLeave={() =>
+              setIsHoveringButton(false)
+            }
           >
             📁 Select Folder
+
             <input
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,.pdf"
               webkitdirectory=""
               directory=""
               multiple
+              disabled={isProcessing}
               onChange={handleFolderChange}
               style={styles.hiddenInput}
             />
           </label>
 
           <button
-            style={styles.clearButton}
+            type="button"
+            style={{
+              ...styles.clearButton,
+              opacity:
+                files.length === 0 || isProcessing
+                  ? 0.6
+                  : 1,
+            }}
             onClick={clearFiles}
-            onMouseEnter={() => setIsHoveringButton(true)}
-            onMouseLeave={() => setIsHoveringButton(false)}
+            disabled={
+              files.length === 0 || isProcessing
+            }
+            onMouseEnter={() =>
+              setIsHoveringButton(true)
+            }
+            onMouseLeave={() =>
+              setIsHoveringButton(false)
+            }
           >
             ❌ Clear
           </button>
 
           <button
+            type="button"
             style={{
               ...styles.scrapeButton,
-              opacity: files.length === 0 ? 0.6 : 1
+              opacity:
+                files.length === 0 || isProcessing
+                  ? 0.6
+                  : 1,
             }}
             onClick={handleScrape}
-            disabled={files.length === 0}
-            onMouseEnter={() => setIsHoveringButton(true)}
-            onMouseLeave={() => setIsHoveringButton(false)}
+            disabled={
+              files.length === 0 || isProcessing
+            }
+            onMouseEnter={() =>
+              setIsHoveringButton(true)
+            }
+            onMouseLeave={() =>
+              setIsHoveringButton(false)
+            }
           >
-            🥄 Scrape & Export Excel
+            {isProcessing
+              ? `Processing ${processedFiles}/${totalFiles}`
+              : "🥄 Scrape & Export Excel"}
           </button>
         </div>
 
+        {isProcessing && (
+          <div style={styles.progressContainer}>
+            <div
+              style={{
+                ...styles.progressCircle,
+                background: `conic-gradient(
+                  #16a34a ${progressPercentage * 3.6}deg,
+                  #e5e7eb 0deg
+                )`,
+              }}
+            >
+              <div style={styles.progressCircleInner}>
+                <span style={styles.progressPercentage}>
+                  {progressPercentage}%
+                </span>
+              </div>
+            </div>
+
+            <div style={styles.progressText}>
+              <strong>
+                {processedFiles}/{totalFiles} files processed
+              </strong>
+
+              <span>
+                {processedFiles < totalFiles
+                  ? "Reading photometric data..."
+                  : "Creating Excel file..."}
+              </span>
+            </div>
+          </div>
+        )}
+
         {files.length > 0 && (
           <div style={styles.fileBox}>
-            <p style={styles.fileCount}>{files.length} PDF files selected</p>
+            <p style={styles.fileCount}>
+              {files.length} PDF{" "}
+              {files.length === 1 ? "file" : "files"}{" "}
+              selected
+            </p>
 
             <ul style={styles.fileList}>
-              {files.map((f, i) => (
-                <li key={i} style={styles.fileItem}>
-                  {f.webkitRelativePath || f.name}
-                </li>
-              ))}
+              {files.map((file) => {
+                const fileKey =
+                  file.webkitRelativePath ||
+                  `${file.name}-${file.size}-${file.lastModified}`;
+
+                return (
+                  <li
+                    key={fileKey}
+                    style={styles.fileItem}
+                  >
+                    {file.webkitRelativePath || file.name}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -284,7 +456,7 @@ const styles = {
     cursor: "none",
     background:
       "linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #334155 100%)",
-    fontFamily: "sans-serif"
+    fontFamily: "sans-serif",
   },
 
   background: {
@@ -294,32 +466,26 @@ const styles = {
     height: "100vh",
     overflow: "hidden",
     pointerEvents: "none",
-    zIndex: 0
+    zIndex: 0,
   },
 
   cursorGlow: {
     position: "fixed",
     width: 42,
     height: 42,
-
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-
     transform: "translate(-50%, -50%)",
-
     fontSize: 26,
-
     pointerEvents: "none",
     zIndex: 9999,
-
     filter: `
       drop-shadow(0 0 6px rgba(255, 230, 90, 0.95))
       drop-shadow(0 0 14px rgba(255, 210, 70, 0.8))
       drop-shadow(0 0 24px rgba(255, 190, 40, 0.45))
     `,
-
-    transition: "transform 0.03s linear"
+    transition: "transform 0.03s linear",
   },
 
   cursorGlowActive: {
@@ -327,14 +493,15 @@ const styles = {
       drop-shadow(0 0 6px rgba(255, 80, 80, 1))
       drop-shadow(0 0 14px rgba(239, 68, 68, 0.9))
       drop-shadow(0 0 28px rgba(220, 38, 38, 0.6))
-    `
+    `,
   },
 
   bulb: {
     position: "absolute",
     userSelect: "none",
     willChange: "transform",
-    filter: "drop-shadow(0 0 8px rgba(255, 220, 100, 0.45))"
+    filter:
+      "drop-shadow(0 0 8px rgba(255, 220, 100, 0.45))",
   },
 
   overlay: {
@@ -342,7 +509,7 @@ const styles = {
     inset: 0,
     background: "rgba(15, 23, 42, 0.05)",
     zIndex: 1,
-    pointerEvents: "none"
+    pointerEvents: "none",
   },
 
   container: {
@@ -351,30 +518,35 @@ const styles = {
     padding: 30,
     border: "1px solid rgba(255,255,255,0.15)",
     borderRadius: 16,
-    background: "rgba(255, 255, 255, 0.9)",
+    background: "rgba(255,255,255,0.9)",
     backdropFilter: "blur(10px)",
     WebkitBackdropFilter: "blur(10px)",
     maxWidth: 700,
     width: "100%",
     margin: "auto",
-    boxShadow: "0 12px 40px rgba(0,0,0,0.25)"
+    boxSizing: "border-box",
+    boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
   },
 
   title: {
+    marginTop: 0,
     marginBottom: 20,
     color: "#111827",
-    fontSize: 28
+    fontSize: 28,
   },
 
   buttonRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 20
-  },
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexWrap: "nowrap",
+  gap: 12,
+  marginBottom: 20,
+  width: "100%",
+},
 
   hiddenInput: {
-    display: "none"
+    display: "none",
   },
 
   button: {
@@ -386,7 +558,8 @@ const styles = {
     fontWeight: 500,
     transition: "0.2s",
     border: "none",
-    boxShadow: "0 4px 12px rgba(79, 70, 229, 0.25)"
+    boxShadow:
+      "0 4px 12px rgba(79, 70, 229, 0.25)",
   },
 
   clearButton: {
@@ -397,7 +570,8 @@ const styles = {
     cursor: "none",
     border: "none",
     fontWeight: 500,
-    boxShadow: "0 4px 12px rgba(239, 68, 68, 0.25)"
+    boxShadow:
+      "0 4px 12px rgba(239, 68, 68, 0.25)",
   },
 
   scrapeButton: {
@@ -409,7 +583,58 @@ const styles = {
     border: "none",
     fontWeight: 600,
     fontSize: 15,
-    boxShadow: "0 4px 12px rgba(22, 163, 74, 0.25)"
+    boxShadow:
+      "0 4px 12px rgba(22, 163, 74, 0.25)",
+  },
+
+  progressContainer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 18,
+    marginBottom: 20,
+    padding: 18,
+    background: "rgba(255,255,255,0.95)",
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+  },
+
+  progressCircle: {
+    width: 86,
+    height: 86,
+    flexShrink: 0,
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "background 0.25s ease",
+    boxShadow:
+      "0 4px 14px rgba(0,0,0,0.12)",
+  },
+
+  progressCircleInner: {
+    width: 66,
+    height: 66,
+    borderRadius: "50%",
+    background: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  progressPercentage: {
+    fontSize: 17,
+    fontWeight: 700,
+    color: "#111827",
+  },
+
+  progressText: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 5,
+    color: "#374151",
+    textAlign: "left",
   },
 
   fileBox: {
@@ -418,22 +643,24 @@ const styles = {
     padding: 15,
     border: "1px solid #e5e5e5",
     maxHeight: 300,
-    overflowY: "auto"
+    overflowY: "auto",
   },
 
   fileCount: {
+    marginTop: 0,
     marginBottom: 10,
     fontWeight: 600,
-    color: "#111827"
+    color: "#111827",
   },
 
   fileList: {
     paddingLeft: 20,
-    margin: 0
+    margin: 0,
   },
 
   fileItem: {
     marginBottom: 4,
-    color: "#374151"
-  }
+    color: "#374151",
+    overflowWrap: "anywhere",
+  },
 };

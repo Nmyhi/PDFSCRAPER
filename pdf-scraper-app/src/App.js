@@ -7,24 +7,46 @@ import { generateExcelFromPDFs } from "./utils/pdfToExcel";
 function App() {
   const [loading, setLoading] = useState(false);
 
-  const handleFiles = async (files) => {
+  const handleFiles = async (files, onProgress) => {
     setLoading(true);
+
     const extracted = [];
 
-    for (const file of files) {
-      const text = await extractTextFromPDF(file);
-      const fields = parseProductData(text, file.name);
-      extracted.push({ filename: file.name.replace(".pdf", ""), fields });
-    }
+    try {
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
 
-    generateExcelFromPDFs(extracted);
-    setLoading(false);
+        try {
+          const text = await extractTextFromPDF(file);
+          const fields = parseProductData(text, file.name);
+
+          extracted.push({
+            filename: file.name.replace(/\.pdf$/i, ""),
+            fields,
+          });
+        } catch (error) {
+          console.error(`Failed to process ${file.name}:`, error);
+        }
+
+        // Update progress after each file finishes
+        onProgress?.(index + 1);
+
+        // Allow React to repaint the progress indicator
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+
+      generateExcelFromPDFs(extracted);
+    } catch (error) {
+      console.error("PDF processing failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const styles = {
     page: {
       padding: 20,
-      textAlign: "center"
+      textAlign: "center",
     },
 
     header: {
@@ -32,7 +54,7 @@ function App() {
       display: "flex",
       justifyContent: "flex-start",
       alignItems: "center",
-      marginBottom: 30
+      marginBottom: 30,
     },
 
     titleImage: {
@@ -41,14 +63,14 @@ function App() {
       height: "auto",
       objectFit: "contain",
       marginLeft: "-10px",
-      filter: "drop-shadow(0 0 18px rgba(255,255,255,0.2))"
+      filter: "drop-shadow(0 0 18px rgba(255,255,255,0.2))",
     },
 
     loading: {
       marginTop: 20,
       color: "#e5e7eb",
-      fontSize: 16
-    }
+      fontSize: 16,
+    },
   };
 
   return (
