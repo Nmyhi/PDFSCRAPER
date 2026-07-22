@@ -108,11 +108,15 @@ export const parseProductData = (text, filename = "") => {
   // Lookup ForwardVoltage and DriverCurrent from filename reference
   const referenceValues = getReferenceValuesFromFilename(filename);
 
+  /*
+
   console.log("---- RAW TEXT SAMPLE ----");
   console.log(text);
   console.log("---- REFERENCE LOOKUP ----");
   console.log("filename:", filename);
   console.log("reference values:", referenceValues);
+
+  */
 
   return {
     // --- from filename ---
@@ -215,6 +219,6 @@ export const parseProductData = (text, filename = "") => {
     ),
 
     AVGUGR: extractAVGUGR(text),
-    
+
   };
 };
