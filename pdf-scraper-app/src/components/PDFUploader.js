@@ -35,6 +35,9 @@ function PDFUploader({ onFilesSelected }) {
       "⚡",
       "⚙️",
       "🔥",
+      "🚨",
+      "🔭",
+      "📏",
     ];
 
     const createdParticles = Array.from({ length: 60 }, (_, i) => ({
@@ -252,7 +255,7 @@ function PDFUploader({ onFilesSelected }) {
           top: mouseGlow.y,
         }}
       >
-        💡
+        💩
       </div>
 
       <div style={styles.background}>
@@ -457,6 +460,7 @@ const styles = {
     background:
       "linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #334155 100%)",
     fontFamily: "sans-serif",
+    color: "#0c0c0c",
   },
 
   background: {
@@ -467,6 +471,7 @@ const styles = {
     overflow: "hidden",
     pointerEvents: "none",
     zIndex: 0,
+    color: "#0c0c0c",
   },
 
   cursorGlow: {
@@ -518,7 +523,7 @@ const styles = {
     padding: 30,
     border: "1px solid rgba(255,255,255,0.15)",
     borderRadius: 16,
-    background: "rgba(255,255,255,0.9)",
+    background: "#0c0c0c",
     backdropFilter: "blur(10px)",
     WebkitBackdropFilter: "blur(10px)",
     maxWidth: 700,
@@ -531,7 +536,7 @@ const styles = {
   title: {
     marginTop: 0,
     marginBottom: 20,
-    color: "#111827",
+    color: "#3c5997",
     fontSize: 28,
   },
 
@@ -595,7 +600,7 @@ const styles = {
     gap: 18,
     marginBottom: 20,
     padding: 18,
-    background: "rgba(255,255,255,0.95)",
+    background: "rgba(19, 18, 18, 0.95)",
     border: "1px solid #e5e7eb",
     borderRadius: 12,
   },
@@ -626,7 +631,7 @@ const styles = {
   progressPercentage: {
     fontSize: 17,
     fontWeight: 700,
-    color: "#111827",
+    color: "#3159af",
   },
 
   progressText: {
@@ -638,10 +643,10 @@ const styles = {
   },
 
   fileBox: {
-    background: "rgba(255,255,255,0.95)",
+    background: "rgba(30, 35, 48, 0.95)",
     borderRadius: 8,
     padding: 15,
-    border: "1px solid #e5e5e5",
+    border: "2px solid #253033",
     maxHeight: 300,
     overflowY: "auto",
   },
@@ -650,17 +655,18 @@ const styles = {
     marginTop: 0,
     marginBottom: 10,
     fontWeight: 600,
-    color: "#111827",
+    color: "#446dc4",
   },
 
   fileList: {
     paddingLeft: 20,
     margin: 0,
+    background: "#0e0f0f",
   },
 
   fileItem: {
     marginBottom: 4,
-    color: "#374151",
+    color: "#4776c2",
     overflowWrap: "anywhere",
   },
 };

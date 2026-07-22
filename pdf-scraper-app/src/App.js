@@ -47,6 +47,7 @@ function App() {
     page: {
       padding: 20,
       textAlign: "center",
+      background: "#0c0c0c",
     },
 
     header: {
@@ -55,6 +56,7 @@ function App() {
       justifyContent: "flex-start",
       alignItems: "center",
       marginBottom: 30,
+      background: "#0c0c0c",
     },
 
     titleImage: {
@@ -68,7 +70,7 @@ function App() {
 
     loading: {
       marginTop: 20,
-      color: "#e5e7eb",
+      color: "#0c0c0c",
       fontSize: 16,
     },
   };
