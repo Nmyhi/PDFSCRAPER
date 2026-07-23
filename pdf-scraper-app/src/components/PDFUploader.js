@@ -16,6 +16,11 @@ function PDFUploader({ onFilesSelected }) {
     y: -100,
   });
 
+  const [smellTrail, setSmellTrail] = useState([]);
+
+  const smellIdRef = useRef(0);
+  const lastSmellTimeRef = useRef(0);
+
   const mouseRef = useRef({
     x: -9999,
     y: -9999,
@@ -24,6 +29,99 @@ function PDFUploader({ onFilesSelected }) {
   const animationRef = useRef(null);
 
   useEffect(() => {
+    const styleElement = document.createElement("style");
+
+    styleElement.textContent = `
+      @keyframes smellFade {
+        0% {
+          opacity: 0.85;
+          transform:
+            translate(-50%, -50%)
+            scale(0.45)
+            rotate(var(--rotation));
+        }
+
+        100% {
+          opacity: 0;
+          transform:
+            translate(
+              calc(-50% + var(--drift-x)),
+              calc(-50% + var(--drift-y))
+            )
+            scale(2.3)
+            rotate(calc(var(--rotation) + 80deg));
+        }
+      }
+
+      @keyframes flyOrbitOne {
+        0% {
+          transform: translate(-18px, -10px);
+        }
+
+        25% {
+          transform: translate(8px, -22px);
+        }
+
+        50% {
+          transform: translate(20px, 3px);
+        }
+
+        75% {
+          transform: translate(-5px, 18px);
+        }
+
+        100% {
+          transform: translate(-18px, -10px);
+        }
+      }
+
+      @keyframes flyOrbitTwo {
+        0% {
+          transform: translate(16px, -12px);
+        }
+
+        25% {
+          transform: translate(22px, 12px);
+        }
+
+        50% {
+          transform: translate(-4px, 22px);
+        }
+
+        75% {
+          transform: translate(-22px, -3px);
+        }
+
+        100% {
+          transform: translate(16px, -12px);
+        }
+      }
+
+      @keyframes flyOrbitThree {
+        0% {
+          transform: translate(-4px, -24px);
+        }
+
+        25% {
+          transform: translate(23px, -4px);
+        }
+
+        50% {
+          transform: translate(4px, 20px);
+        }
+
+        75% {
+          transform: translate(-20px, 8px);
+        }
+
+        100% {
+          transform: translate(-4px, -24px);
+        }
+      }
+    `;
+
+    document.head.appendChild(styleElement);
+
     const emojis = [
       "💡",
       "🔦",
@@ -58,15 +156,41 @@ function PDFUploader({ onFilesSelected }) {
     setParticles(createdParticles);
 
     const handleMouseMove = (event) => {
-      mouseRef.current = {
-        x: event.clientX,
-        y: event.clientY,
-      };
+      const x = event.clientX;
+      const y = event.clientY;
 
-      setMouseGlow({
-        x: event.clientX,
-        y: event.clientY,
-      });
+      mouseRef.current = { x, y };
+
+      setMouseGlow({ x, y });
+
+      const now = Date.now();
+
+      if (now - lastSmellTimeRef.current > 35) {
+        lastSmellTimeRef.current = now;
+
+        const newPuff = {
+          id: smellIdRef.current++,
+          x: x - 8 + Math.random() * 16,
+          y: y + 10 + Math.random() * 12,
+          size: 10 + Math.random() * 18,
+          driftX: -20 + Math.random() * 40,
+          driftY: 20 + Math.random() * 30,
+          rotation: Math.random() * 360,
+        };
+
+        setSmellTrail((previousTrail) => [
+          ...previousTrail.slice(-22),
+          newPuff,
+        ]);
+
+        window.setTimeout(() => {
+          setSmellTrail((previousTrail) =>
+            previousTrail.filter(
+              (puff) => puff.id !== newPuff.id
+            )
+          );
+        }, 900);
+      }
     };
 
     const handleMouseLeave = () => {
@@ -151,18 +275,29 @@ function PDFUploader({ onFilesSelected }) {
         })
       );
 
-      animationRef.current = requestAnimationFrame(animate);
+      animationRef.current =
+        requestAnimationFrame(animate);
     };
 
-    animationRef.current = requestAnimationFrame(animate);
+    animationRef.current =
+      requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener(
+        "mousemove",
+        handleMouseMove
+      );
+
+      window.removeEventListener(
+        "mouseleave",
+        handleMouseLeave
+      );
 
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
+
+      styleElement.remove();
     };
   }, []);
 
@@ -189,7 +324,9 @@ function PDFUploader({ onFilesSelected }) {
   };
 
   const handleFileChange = (event) => {
-    const selectedFiles = Array.from(event.target.files || []);
+    const selectedFiles = Array.from(
+      event.target.files || []
+    );
 
     mergePdfFiles(selectedFiles);
 
@@ -197,7 +334,9 @@ function PDFUploader({ onFilesSelected }) {
   };
 
   const handleFolderChange = (event) => {
-    const selectedFiles = Array.from(event.target.files || []);
+    const selectedFiles = Array.from(
+      event.target.files || []
+    );
 
     mergePdfFiles(selectedFiles);
 
@@ -222,7 +361,10 @@ function PDFUploader({ onFilesSelected }) {
         setProcessedFiles(completed);
       });
     } catch (error) {
-      console.error("PDF processing failed:", error);
+      console.error(
+        "PDF processing failed:",
+        error
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -240,11 +382,31 @@ function PDFUploader({ onFilesSelected }) {
 
   const progressPercentage =
     totalFiles > 0
-      ? Math.round((processedFiles / totalFiles) * 100)
+      ? Math.round(
+          (processedFiles / totalFiles) * 100
+        )
       : 0;
 
   return (
     <div style={styles.page}>
+      <div style={styles.smellLayer}>
+        {smellTrail.map((puff) => (
+          <div
+            key={puff.id}
+            style={{
+              ...styles.smellPuff,
+              left: puff.x,
+              top: puff.y,
+              width: puff.size,
+              height: puff.size,
+              "--drift-x": `${puff.driftX}px`,
+              "--drift-y": `${puff.driftY}px`,
+              "--rotation": `${puff.rotation}deg`,
+            }}
+          />
+        ))}
+      </div>
+
       <div
         style={{
           ...styles.cursorGlow,
@@ -255,7 +417,28 @@ function PDFUploader({ onFilesSelected }) {
           top: mouseGlow.y,
         }}
       >
-        💩
+        <span style={styles.pooEmoji}>💩</span>
+
+        <span
+          style={{
+            ...styles.fly,
+            ...styles.flyOne,
+          }}
+        />
+
+        <span
+          style={{
+            ...styles.fly,
+            ...styles.flyTwo,
+          }}
+        />
+
+        <span
+          style={{
+            ...styles.fly,
+            ...styles.flyThree,
+          }}
+        />
       </div>
 
       <div style={styles.background}>
@@ -283,7 +466,9 @@ function PDFUploader({ onFilesSelected }) {
       <div style={styles.overlay} />
 
       <div style={styles.container}>
-        <h2 style={styles.title}>PDF Scraper</h2>
+        <h2 style={styles.title}>
+          PDF Scraper
+        </h2>
 
         <div style={styles.buttonRow}>
           <label
@@ -341,13 +526,15 @@ function PDFUploader({ onFilesSelected }) {
             style={{
               ...styles.clearButton,
               opacity:
-                files.length === 0 || isProcessing
+                files.length === 0 ||
+                isProcessing
                   ? 0.6
                   : 1,
             }}
             onClick={clearFiles}
             disabled={
-              files.length === 0 || isProcessing
+              files.length === 0 ||
+              isProcessing
             }
             onMouseEnter={() =>
               setIsHoveringButton(true)
@@ -364,13 +551,15 @@ function PDFUploader({ onFilesSelected }) {
             style={{
               ...styles.scrapeButton,
               opacity:
-                files.length === 0 || isProcessing
+                files.length === 0 ||
+                isProcessing
                   ? 0.6
                   : 1,
             }}
             onClick={handleScrape}
             disabled={
-              files.length === 0 || isProcessing
+              files.length === 0 ||
+              isProcessing
             }
             onMouseEnter={() =>
               setIsHoveringButton(true)
@@ -391,13 +580,23 @@ function PDFUploader({ onFilesSelected }) {
               style={{
                 ...styles.progressCircle,
                 background: `conic-gradient(
-                  #16a34a ${progressPercentage * 3.6}deg,
+                  #16a34a ${
+                    progressPercentage * 3.6
+                  }deg,
                   #e5e7eb 0deg
                 )`,
               }}
             >
-              <div style={styles.progressCircleInner}>
-                <span style={styles.progressPercentage}>
+              <div
+                style={
+                  styles.progressCircleInner
+                }
+              >
+                <span
+                  style={
+                    styles.progressPercentage
+                  }
+                >
                   {progressPercentage}%
                 </span>
               </div>
@@ -405,7 +604,8 @@ function PDFUploader({ onFilesSelected }) {
 
             <div style={styles.progressText}>
               <strong>
-                {processedFiles}/{totalFiles} files processed
+                {processedFiles}/{totalFiles}{" "}
+                files processed
               </strong>
 
               <span>
@@ -421,7 +621,9 @@ function PDFUploader({ onFilesSelected }) {
           <div style={styles.fileBox}>
             <p style={styles.fileCount}>
               {files.length} PDF{" "}
-              {files.length === 1 ? "file" : "files"}{" "}
+              {files.length === 1
+                ? "file"
+                : "files"}{" "}
               selected
             </p>
 
@@ -436,7 +638,8 @@ function PDFUploader({ onFilesSelected }) {
                     key={fileKey}
                     style={styles.fileItem}
                   >
-                    {file.webkitRelativePath || file.name}
+                    {file.webkitRelativePath ||
+                      file.name}
                   </li>
                 );
               })}
@@ -486,19 +689,91 @@ const styles = {
     pointerEvents: "none",
     zIndex: 9999,
     filter: `
-      drop-shadow(0 0 6px rgba(255, 230, 90, 0.95))
-      drop-shadow(0 0 14px rgba(255, 210, 70, 0.8))
-      drop-shadow(0 0 24px rgba(255, 190, 40, 0.45))
+      drop-shadow(
+        0 0 6px
+        rgba(255, 230, 90, 0.95)
+      )
+      drop-shadow(
+        0 0 14px
+        rgba(255, 210, 70, 0.8)
+      )
+      drop-shadow(
+        0 0 24px
+        rgba(255, 190, 40, 0.45)
+      )
     `,
     transition: "transform 0.03s linear",
   },
 
   cursorGlowActive: {
     filter: `
-      drop-shadow(0 0 6px rgba(255, 80, 80, 1))
-      drop-shadow(0 0 14px rgba(239, 68, 68, 0.9))
-      drop-shadow(0 0 28px rgba(220, 38, 38, 0.6))
+      drop-shadow(
+        0 0 6px
+        rgba(255, 80, 80, 1)
+      )
+      drop-shadow(
+        0 0 14px
+        rgba(239, 68, 68, 0.9)
+      )
+      drop-shadow(
+        0 0 28px
+        rgba(220, 38, 38, 0.6)
+      )
     `,
+  },
+
+  smellLayer: {
+    position: "fixed",
+    inset: 0,
+    pointerEvents: "none",
+    zIndex: 9997,
+    overflow: "hidden",
+  },
+
+  smellPuff: {
+    position: "fixed",
+    borderRadius: "50%",
+    pointerEvents: "none",
+    background:
+      "radial-gradient(circle, rgba(74, 222, 128, 0.75) 0%, rgba(34, 197, 94, 0.5) 45%, rgba(22, 163, 74, 0) 75%)",
+    filter: "blur(3px)",
+    animation:
+      "smellFade 900ms ease-out forwards",
+    transform: "translate(-50%, -50%)",
+  },
+
+  pooEmoji: {
+    position: "relative",
+    zIndex: 2,
+  },
+
+  fly: {
+    position: "absolute",
+    left: "50%",
+    top: "50%",
+    width: 4,
+    height: 4,
+    background: "#050505",
+    borderRadius: "50%",
+    boxShadow:
+      "0 0 2px rgba(0,0,0,0.95)",
+    pointerEvents: "none",
+    zIndex: 3,
+  },
+
+  flyOne: {
+    animation:
+      "flyOrbitOne 1.1s linear infinite",
+  },
+
+  flyTwo: {
+    animation:
+      "flyOrbitTwo 1.4s linear infinite",
+  },
+
+  flyThree: {
+    animation:
+      "flyOrbitThree 0.9s linear infinite",
   },
 
   bulb: {
@@ -512,7 +787,8 @@ const styles = {
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(15, 23, 42, 0.05)",
+    background:
+      "rgba(15, 23, 42, 0.05)",
     zIndex: 1,
     pointerEvents: "none",
   },
@@ -521,7 +797,8 @@ const styles = {
     position: "relative",
     zIndex: 2,
     padding: 30,
-    border: "1px solid rgba(255,255,255,0.15)",
+    border:
+      "1px solid rgba(255,255,255,0.15)",
     borderRadius: 16,
     background: "#0c0c0c",
     backdropFilter: "blur(10px)",
@@ -530,7 +807,8 @@ const styles = {
     width: "100%",
     margin: "auto",
     boxSizing: "border-box",
-    boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
+    boxShadow:
+      "0 12px 40px rgba(0,0,0,0.25)",
   },
 
   title: {
@@ -541,14 +819,14 @@ const styles = {
   },
 
   buttonRow: {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  flexWrap: "nowrap",
-  gap: 12,
-  marginBottom: 20,
-  width: "100%",
-},
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "nowrap",
+    gap: 12,
+    marginBottom: 20,
+    width: "100%",
+  },
 
   hiddenInput: {
     display: "none",
@@ -600,7 +878,8 @@ const styles = {
     gap: 18,
     marginBottom: 20,
     padding: 18,
-    background: "rgba(19, 18, 18, 0.95)",
+    background:
+      "rgba(19, 18, 18, 0.95)",
     border: "1px solid #e5e7eb",
     borderRadius: 12,
   },
@@ -613,7 +892,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    transition: "background 0.25s ease",
+    transition:
+      "background 0.25s ease",
     boxShadow:
       "0 4px 14px rgba(0,0,0,0.12)",
   },
@@ -643,7 +923,8 @@ const styles = {
   },
 
   fileBox: {
-    background: "rgba(30, 35, 48, 0.95)",
+    background:
+      "rgba(30, 35, 48, 0.95)",
     borderRadius: 8,
     padding: 15,
     border: "2px solid #253033",

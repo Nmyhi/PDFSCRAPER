@@ -48,6 +48,7 @@ function App() {
       padding: 20,
       textAlign: "center",
       background: "#0c0c0c",
+      cursor: "none",
     },
 
     header: {
@@ -57,6 +58,7 @@ function App() {
       alignItems: "center",
       marginBottom: 30,
       background: "#0c0c0c",
+      cursor: "none",
     },
 
     titleImage: {
@@ -66,12 +68,14 @@ function App() {
       objectFit: "contain",
       marginLeft: "-10px",
       filter: "drop-shadow(0 0 18px rgba(255,255,255,0.2))",
+      cursor: "none",
     },
 
     loading: {
       marginTop: 20,
       color: "#0c0c0c",
       fontSize: 16,
+      cursor: "none",
     },
   };
 
