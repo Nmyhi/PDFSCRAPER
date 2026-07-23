@@ -138,7 +138,7 @@ function PDFUploader({ onFilesSelected }) {
       "📏",
     ];
 
-    const createdParticles = Array.from({ length: 1000 }, (_, i) => ({
+    const createdParticles = Array.from({ length: 60 }, (_, i) => ({
       id: i,
       x: Math.random() * window.innerWidth,
       y: -Math.random() * window.innerHeight,
